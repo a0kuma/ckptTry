@@ -348,6 +348,7 @@ def checkpoint(
     context_fn: Callable[[], Tuple[ContextManager, ContextManager]] = noop_context_fn,
     determinism_check: str = _DEFAULT_DETERMINISM_MODE,
     debug: bool = False,
+    eager_delete: bool = False,
     **kwargs
 ):
     r"""Checkpoint a model or part of the model.
@@ -486,10 +487,15 @@ def checkpoint(
                 "Passing `context_fn` or `debug` is only supported when "
                 "use_reentrant=False."
             )
+        if eager_delete:
+            raise ValueError(
+                "eager_delete is only supported when use_reentrant=False."
+            )
         return CheckpointFunction.apply(function, preserve, *args)
     else:
         gen = _checkpoint_without_reentrant_generator(
-            function, preserve, context_fn, determinism_check, debug, *args, **kwargs
+            function, preserve, context_fn, determinism_check, debug,
+            eager_delete=eager_delete, *args, **kwargs
         )
         # Runs pre-forward logic
         next(gen)
@@ -813,7 +819,8 @@ class _NoopSaveInputs(torch.autograd.Function):
 
 
 class _CheckpointFrame:
-    def __init__(self, recompute_fn, early_stop, unpack_error_cb, metadata_fn):
+    def __init__(self, recompute_fn, early_stop, unpack_error_cb, metadata_fn,
+                 eager_delete=False):
         self.recompute_fn = recompute_fn
         self.input_saver = None
         self.weak_holders: List[ReferenceType] = []
@@ -830,6 +837,14 @@ class _CheckpointFrame:
 
         # See Rule 5
         self.early_stop = early_stop
+
+        # --- Eager delete mode ---
+        # When True, each unpack triggers a fresh recomputation that stops at
+        # the needed tensor index, then immediately clears all recomputed tensors.
+        # This trades O(N^2) recomputation for O(1) activation memory.
+        self.eager_delete = eager_delete
+        # Set by unpack_hook to tell _recomputation_hook where to stop
+        self._eager_target_idx: Optional[int] = None
 
         # Debugging
         self.metadata_fn = metadata_fn
@@ -1081,7 +1096,11 @@ class _recomputation_hook(torch.autograd.graph.saved_tensors_hooks):
                 holder.handles[gid] = _Handle()
                 target_frame.recomputed[gid][holder.handles[gid]] = x
 
-            if target_frame.early_stop and target_frame.recomp_counter[gid] == len(
+            # --- Eager delete mode: stop right after reaching the target tensor ---
+            if target_frame.eager_delete and target_frame._eager_target_idx is not None:
+                if recomp_idx >= target_frame._eager_target_idx:
+                    raise _StopRecomputationError
+            elif target_frame.early_stop and target_frame.recomp_counter[gid] == len(
                 target_frame.weak_holders
             ):
                 raise _StopRecomputationError
@@ -1114,10 +1133,35 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
                 # generate a temporary id if we trigger unpack outside of a backward call
                 gid = int(uuid.uuid4())
 
-            if not frame.is_recomputed[gid]:
+            if frame.eager_delete:
+                # ---- EAGER DELETE MODE ----
+                # Each unpack triggers a FRESH recomputation that stops at the
+                # needed tensor, then clears everything immediately.
+                # This means O(N^2) recompute but O(1) activation memory.
+
+                # Find the index of the holder being unpacked
+                target_idx = None
+                for idx, wh in enumerate(frame.weak_holders):
+                    if wh() is holder:
+                        target_idx = idx
+                        break
+                _internal_assert(target_idx is not None)
+
+                # Clear handles from any previous recomputation so the
+                # pack_hook assertion (handles.get(gid, None) is None) passes
+                for wh in frame.weak_holders:
+                    h = wh()
+                    if h is not None:
+                        h.handles.pop(gid, None)
+
+                # Reset recomputation state for a fresh recompute
+                frame.recomp_counter[gid] = 0
+                frame.recomputed[gid] = weakref.WeakKeyDictionary()
+                frame._eager_target_idx = target_idx
+
+                # Recompute from scratch, will stop at target_idx
                 ctx = frame.input_saver.grad_fn
                 args = ctx.get_args(ctx.saved_tensors)
-
                 try:
                     with _recomputation_hook(
                         weakref.ref(frame), gid
@@ -1125,21 +1169,47 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
                         frame.recompute_fn(*args)
                 except _StopRecomputationError:
                     pass
-                frame.is_recomputed[gid] = True
-                frame.check_recomputed_tensors_match(gid)
 
-            _internal_assert(gid in holder.handles)
+                # Retrieve the target tensor
+                _internal_assert(gid in holder.handles)
+                _internal_assert(holder.handles[gid] is not None)
+                _internal_assert(holder.handles[gid] in frame.recomputed[gid])
+                ret = frame.recomputed[gid][holder.handles[gid]]
+                holder.handles[gid] = None
 
-            if holder.handles[gid] is None:
-                raise CheckpointError(
-                    "torch.utils.checkpoint: Unpack is being triggered for a tensor that was already "
-                    "unpacked once. If you are calling ctx.saved_tensors in backward, make sure to do "
-                    "so only once. Otherwise please open an issue with details on your use case."
-                )
-            _internal_assert(holder.handles[gid] in frame.recomputed[gid])
-            ret = frame.recomputed[gid][holder.handles[gid]]
-            holder.handles[gid] = None
-            return ret
+                # Eagerly delete ALL recomputed tensors (the key win)
+                frame.recomputed[gid] = weakref.WeakKeyDictionary()
+
+                return ret
+
+            else:
+                # ---- ORIGINAL BEHAVIOR ----
+                if not frame.is_recomputed[gid]:
+                    ctx = frame.input_saver.grad_fn
+                    args = ctx.get_args(ctx.saved_tensors)
+
+                    try:
+                        with _recomputation_hook(
+                            weakref.ref(frame), gid
+                        ), torch.autograd.enable_grad():
+                            frame.recompute_fn(*args)
+                    except _StopRecomputationError:
+                        pass
+                    frame.is_recomputed[gid] = True
+                    frame.check_recomputed_tensors_match(gid)
+
+                _internal_assert(gid in holder.handles)
+
+                if holder.handles[gid] is None:
+                    raise CheckpointError(
+                        "torch.utils.checkpoint: Unpack is being triggered for a tensor that was already "
+                        "unpacked once. If you are calling ctx.saved_tensors in backward, make sure to do "
+                        "so only once. Otherwise please open an issue with details on your use case."
+                    )
+                _internal_assert(holder.handles[gid] in frame.recomputed[gid])
+                ret = frame.recomputed[gid][holder.handles[gid]]
+                holder.handles[gid] = None
+                return ret
 
         if frame.unpack_error_cb is not None:
             def unpack_hook_with_error_cb(holder):
@@ -1425,6 +1495,7 @@ def _checkpoint_without_reentrant_generator(
     context_fn: Callable[[], Tuple[ContextManager, ContextManager]] = noop_context_fn,
     determinism_check: str = _DEFAULT_DETERMINISM_MODE,
     debug: bool = False,
+    eager_delete: bool = False,
     *args,
     **kwargs
 ):
@@ -1522,7 +1593,8 @@ def _checkpoint_without_reentrant_generator(
         recompute_fn,
         _enable_checkpoint_early_stop,
         unpack_error_cb,
-        metadata_fn
+        metadata_fn,
+        eager_delete=eager_delete,
     )
     dummy = torch.empty((0,), requires_grad=True)
     new_frame.input_saver = _NoopSaveInputs.apply(dummy, kwargs, *args)
