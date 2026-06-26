@@ -1,0 +1,114 @@
+[
+  {
+    "id": 0,
+    "size_in_bytes": 819200
+  },
+  {
+    "id": 1,
+    "size_in_bytes": 8192
+  },
+  {
+    "id": 2,
+    "size_in_bytes": 33554432
+  },
+  {
+    "id": 3,
+    "size_in_bytes": 16384
+  },
+  {
+    "id": 4,
+    "size_in_bytes": 4194304
+  },
+  {
+    "id": 5,
+    "size_in_bytes": 1024
+  },
+  {
+    "id": 6,
+    "size_in_bytes": 10240
+  },
+  {
+    "id": 7,
+    "size_in_bytes": 40
+  },
+  {
+    "id": 8,
+    "size_in_bytes": 12800
+  },
+  {
+    "id": 9,
+    "size_in_bytes": 262144
+  },
+  {
+    "id": 10,
+    "size_in_bytes": 524288
+  },
+  {
+    "id": 11,
+    "size_in_bytes": 32768
+  },
+  {
+    "id": 12,
+    "size_in_bytes": 1280
+  },
+  {
+    "id": 13,
+    "size_in_bytes": 1280
+  },
+  {
+    "id": 14,
+    "size_in_bytes": 262144
+  },
+  {
+    "id": 15,
+    "size_in_bytes": 524288
+  },
+  {
+    "id": 16,
+    "size_in_bytes": 32768
+  },
+  {
+    "id": 17,
+    "size_in_bytes": 32768
+  },
+  {
+    "id": 18,
+    "size_in_bytes": 10240
+  },
+  {
+    "id": 19,
+    "size_in_bytes": 40
+  },
+  {
+    "id": 20,
+    "size_in_bytes": 524288
+  },
+  {
+    "id": 21,
+    "size_in_bytes": 4194304
+  },
+  {
+    "id": 22,
+    "size_in_bytes": 1024
+  },
+  {
+    "id": 23,
+    "size_in_bytes": 262144
+  },
+  {
+    "id": 24,
+    "size_in_bytes": 33554432
+  },
+  {
+    "id": 25,
+    "size_in_bytes": 16384
+  },
+  {
+    "id": 26,
+    "size_in_bytes": 819200
+  },
+  {
+    "id": 27,
+    "size_in_bytes": 8192
+  }
+]
