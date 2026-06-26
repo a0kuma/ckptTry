@@ -1,8 +1,9 @@
 import os
+os.environ["CUBLASLT_WORKSPACE_SIZE"] = "0"
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":0:0"
+
 import torch
 import torch.nn as nn
-os.environ["CUBLASLT_WORKSPACE_SIZE"] = "0"
-os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":16:8"
 
 torch.cuda.memory._record_memory_history()
 model = nn.Sequential(
