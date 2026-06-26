@@ -1,7 +1,6 @@
 import os
 import torch
 import torch.nn as nn
-import torch.utils.checkpoint as checkpoint
 os.environ["CUBLASLT_WORKSPACE_SIZE"] = "0"
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":16:8"
 
@@ -15,13 +14,11 @@ model = nn.Sequential(
 batch_size = 32
 x = torch.randn(batch_size, 100, device='cuda')
 
-y_prime = checkpoint.checkpoint(
-    model,
-    input=x,
-    use_reentrant=False
-)
+y_prime = model(x)
 
-loss=y_prime.sum()
+#loss=y_prime.sum()
+loss_but_in_vec = torch.ones_like(y_prime)
+y_prime.backward(loss_but_in_vec)
+#loss.backward()
+torch.cuda.memory._dump_snapshot('abc_no_ckpt.pickle')
 
-loss.backward()
-torch.cuda.memory._dump_snapshot('abc.pickle')
