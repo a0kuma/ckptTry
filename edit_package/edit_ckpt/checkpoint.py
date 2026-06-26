@@ -1102,6 +1102,20 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
             # See Rule 4 above
             holder = _Holder()
             frame.weak_holders.append(weakref.ref(holder))
+            
+            #print(frame.weak_holders)   
+            print("==== 開始遍歷 weak_holders 隊伍 ==== (pack_hook)")
+            for idx, weak_h in enumerate(frame.weak_holders):
+                # 關鍵：weak_h 只是個外殼（弱引用），必須加小括號 () 才能拿到真正的 Holder 物件
+                h = weak_h() 
+    
+                if h is not None:
+                    # 成功拿到物件，印出它內部的 handles 字典
+                    print(f"位置 [{idx}]: 真正的 Holder 地址是 {hex(id(h))}, 裡面的 handles 是: {h.handles}")
+                else:
+                    # 如果這個物件已經被 Python 的垃圾回收機制殺掉了，呼叫 weak_h() 會回傳 None
+                    print(f"位置 [{idx}]: 這個 Holder 已經被記憶體釋放（蒸發）了！")
+
             # Save metadata to detect non-determinism
             if frame.metadata_fn is not None:
                 with torch.no_grad():
@@ -1109,6 +1123,21 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
             return holder
 
         def unpack_hook(holder):
+
+            print("==== 開始遍歷 weak_holders 隊伍 ==== (unpack hook)")
+            for idx, weak_h in enumerate(frame.weak_holders):
+                # 關鍵：weak_h 只是個外殼（弱引用），必須加小括號 () 才能拿到真正的 Holder 物件
+                h = weak_h() 
+    
+                if h is not None:
+                    # 成功拿到物件，印出它內部的 handles 字典
+                    print(f"位置 [{idx}]: 真正的 Holder 地址是 {hex(id(h))}, 裡面的 handles 是: {h.handles}")
+                else:
+                    # 如果這個物件已經被 Python 的垃圾回收機制殺掉了，呼叫 weak_h() 會回傳 None
+                    print(f"位置 [{idx}]: 這個 Holder 已經被記憶體釋放（蒸發）了！")
+
+
+
             gid = torch._C._current_graph_task_id()
             if gid == -1:
                 # generate a temporary id if we trigger unpack outside of a backward call
