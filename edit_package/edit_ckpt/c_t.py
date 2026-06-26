@@ -9,15 +9,17 @@ from checkpoint import checkpoint
 
 torch.cuda.memory._record_memory_history()
 model = nn.Sequential(
-    nn.Linear(100, 2048, device='cuda'),
-    nn.Linear(2048, 4096, device='cuda'),
-    nn.Linear(4096, 256, device='cuda'),
+    nn.Linear(100, 256, device='cuda'),
+#    nn.Linear(2048, 4096, device='cuda'),
+#    nn.Linear(4096, 256, device='cuda'),
     nn.Linear(256, 10, device='cuda')
 )
 
 # Dummy data
 batch_size = 32
 x = torch.randn(batch_size, 100, device='cuda')
+
+#print(x)
 
 y_prime = checkpoint(
     model,
