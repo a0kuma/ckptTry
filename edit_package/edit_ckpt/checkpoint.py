@@ -1129,6 +1129,7 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
 
         def unpack_hook(holder):
             gid = torch._C._current_graph_task_id()
+            print(gid)
             if gid == -1:
                 # generate a temporary id if we trigger unpack outside of a backward call
                 gid = int(uuid.uuid4())
