@@ -16,7 +16,7 @@ model = nn.Sequential(
 
 # Dummy data
 batch_size = 32
-x = torch.randn(batch_size, 100, requires_grad=True, device='cuda')
+x = torch.randn(batch_size, 100, requires_grad=False, device='cuda')
 
 y_prime = checkpoint.checkpoint(
     model,
@@ -27,4 +27,4 @@ y_prime = checkpoint.checkpoint(
 loss_but_in_vec = torch.ones_like(y_prime)
 y_prime.backward(loss_but_in_vec)
 
-torch.cuda.memory._dump_snapshot('test_diff_no_grade_YES.pickle')
+torch.cuda.memory._dump_snapshot('test_diff_no_grade_NO.pickle')
