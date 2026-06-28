@@ -16,7 +16,7 @@ model = nn.Sequential(
 
 # Dummy data
 batch_size = 32
-x = torch.randn(batch_size, 100, requires_grad=False, device='cuda')
+x = torch.randn(batch_size, 100,  device='cuda')
 
 y_prime = checkpoint.checkpoint(
     model,
