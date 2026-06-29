@@ -23,10 +23,11 @@ y_prime = checkpoint.checkpoint(
     model,
     input = x,
     early_stop = False,
+    determinism_check = "none",
     use_reentrant = False
 )
 
 loss_but_in_vec = torch.ones_like(y_prime)
 y_prime.backward(loss_but_in_vec)
 
-torch.cuda.memory._dump_snapshot('early_stop_False4.pickle')
+torch.cuda.memory._dump_snapshot('rm_save_to_frame.pickle')

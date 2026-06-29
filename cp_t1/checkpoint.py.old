@@ -23,6 +23,7 @@ from typing import NoReturn
 
 from icecream import ic
 ic.configureOutput(includeContext=True)
+ic("mine<3<3<3")
 
 __all__ = [
     "checkpoint",
@@ -517,9 +518,11 @@ def checkpoint(
             function, preserve, context_fn, determinism_check, debug, early_stop, *args, **kwargs
         )
         # Runs pre-forward logic
+        ic("pre-fwd")
         next(gen)
         try:
             ret = function(*args, **kwargs)
+            #ic(ret)
         except BaseException as e:
             try:
                 gen.throw(e)
@@ -533,6 +536,7 @@ def checkpoint(
             raise
         # Runs post-forward logic
         try:
+            ic("post-fwd")
             next(gen)
         except StopIteration:
             return ret
@@ -898,12 +902,12 @@ class _CheckpointFrame:
             # For every holder that is still alive now, it must've been
             # alive when we saw it during recompute, therefore, the
             # gid must be set.
-            #_internal_assert(gid in holder.handles)
+            _internal_assert(gid in holder.handles)
             # We know this is the first unpack, so it couldn't have been set
             # to None yet.
-            #_internal_assert(holder.handles[gid] is not None)
+            _internal_assert(holder.handles[gid] is not None)
             # We always set these together in the recomputation hook
-            #_internal_assert(holder.handles[gid] in self.recomputed[gid])
+            _internal_assert(holder.handles[gid] in self.recomputed[gid])
             # see pack hook, x_metadata is 1:1 with weak_holders.
             x_meta = self.x_metadatas[idx]
             recomputed_x = self.recomputed[gid][holder.handles[gid]]
@@ -1126,8 +1130,7 @@ class _recomputation_hook(torch.autograd.graph.saved_tensors_hooks):
             if holder is not None:
                 _internal_assert(holder.handles.get(gid, None) is None)
                 holder.handles[gid] = _Handle()
-                #ic(x)
-                #target_frame.recomputed[gid][holder.handles[gid]] = x
+                target_frame.recomputed[gid][holder.handles[gid]] = x
 
             if target_frame.early_stop and target_frame.recomp_counter[gid] == len(
                 target_frame.weak_holders
@@ -1159,6 +1162,10 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
         def pack_hook(x):
             # See Rule 4 above
             holder = _Holder()
+            ic(holder)
+            ic(type(holder))
+            ic(weakref.ref(holder))
+            ic(type(weakref.ref(holder)))
             frame.weak_holders.append(weakref.ref(holder))
             # Save metadata to detect non-determinism
             if frame.metadata_fn is not None:
@@ -1689,6 +1696,7 @@ def _checkpoint_without_reentrant_generator(
                 device_ctx,
                 nested_fx_trace_ctx,
             ):  # type: ignore[attr-defined]
+                ic(fn)
                 fn(*args, **kwargs)
 
     new_frame = _CheckpointFrame(
@@ -1697,6 +1705,8 @@ def _checkpoint_without_reentrant_generator(
         unpack_error_cb,
         metadata_fn
     )
+
+    ic(new_frame)
 
     if not torch.is_grad_enabled():
         yield
