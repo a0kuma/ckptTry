@@ -4,7 +4,8 @@ os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":0:0"
 
 import torch
 import torch.nn as nn
-import torch.utils.checkpoint as checkpoint
+#import torch.utils.checkpoint as checkpoint
+import checkpoint
 
 torch.cuda.memory._record_memory_history()
 model = nn.Sequential(
@@ -28,4 +29,4 @@ y_prime = checkpoint.checkpoint(
 loss_but_in_vec = torch.ones_like(y_prime)
 y_prime.backward(loss_but_in_vec)
 
-torch.cuda.memory._dump_snapshot('early_stop_False.pickle')
+torch.cuda.memory._dump_snapshot('early_stop_False4.pickle')

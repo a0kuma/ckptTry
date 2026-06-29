@@ -1,0 +1,84 @@
+For **`use_reentrant=False`**, the recompute call path is here:
+
+```py
+# inside _checkpoint_hook.unpack_hook(holder)
+
+if not frame.is_recomputed[gid]:
+    args = frame.get_inputs()
+
+    try:
+        with _recomputation_hook(
+            weakref.ref(frame), gid
+        ), torch.autograd.enable_grad():
+            _run_fn_with_dynamo_disabled(frame.recompute_fn, *args)
+    except _StopRecomputationError:
+        pass
+```
+
+The actual **call recompute** line is:
+
+```py
+_run_fn_with_dynamo_disabled(frame.recompute_fn, *args)
+```
+
+That calls this wrapper:
+
+```py
+@torch._disable_dynamo
+def _run_fn_with_dynamo_disabled(fn, *args, **kwargs):
+    return fn(*args, **kwargs)
+```
+
+So it eventually calls:
+
+```py
+frame.recompute_fn(*args)
+```
+
+And `frame.recompute_fn` was created earlier inside `_checkpoint_without_reentrant_generator`:
+
+```py
+def recompute_fn(*args) -> None:
+    ...
+    with (...):
+        fn(*args, **kwargs)
+```
+
+So the real recompute is just rerunning your checkpointed function:
+
+```py
+fn(*args, **kwargs)
+```
+
+with RNG/autocast/context restored.  
+
+Flow:
+
+```txt
+backward needs saved tensor
+        ↓
+_checkpoint_hook.unpack_hook(holder)
+        ↓
+frame.get_inputs()
+        ↓
+_run_fn_with_dynamo_disabled(frame.recompute_fn, *args)
+        ↓
+recompute_fn(*args)
+        ↓
+fn(*args, **kwargs)   # your model/function runs again
+```
+
+Also important: `_recomputation_hook` is active during that rerun. Its `pack_hook` catches tensors saved during recompute and stores them in:
+
+```py
+target_frame.recomputed[gid][holder.handles[gid]] = x
+```
+
+If `early_stop=True`, once it has recomputed enough saved tensors, it raises:
+
+```py
+_StopRecomputationError
+```
+
+That is how non-reentrant checkpoint stops before rerunning the whole function when possible. 
+
