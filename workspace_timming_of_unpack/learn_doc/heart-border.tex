@@ -1,0 +1,69 @@
+\definecolor{heartborderred}{HTML}{C91F37}
+
+% Repeated decorative heart border, adapted from the requested source:
+% https://zh.wikipedia.org/zh-tw/%E5%BF%83%E5%BD%A2%E7%AC%A6%E8%99%9F#/media/File:Coraz%C3%B3n.svg
+\tikzset{
+  decorative heart/.pic={
+    \path[
+      fill=heartborderred,
+      draw=heartborderred!65!black,
+      line width=0.12pt
+    ]
+      (0,-1.48)
+      .. controls (-0.55,-0.95) and (-1.78,-0.35) .. (-1.78,0.72)
+      .. controls (-1.78,1.62) and (-0.72,1.95) .. (-0.16,1.18)
+      .. controls (0.02,0.92) and (-0.02,0.92) .. (0.16,1.18)
+      .. controls (0.72,1.95) and (1.78,1.62) .. (1.78,0.72)
+      .. controls (1.78,-0.35) and (0.55,-0.95) .. (0,-1.48)
+      -- cycle;
+  }
+}
+
+\makeatletter
+\newcommand{\DecorativePageBorder}{%
+  \begin{tikzpicture}[remember picture, overlay]
+    \pgfmathsetmacro{\PageW}{\paperwidth/1cm}
+    \pgfmathsetmacro{\PageH}{\paperheight/1cm}
+    \pgfmathsetmacro{\BorderInset}{0.45}
+    \pgfmathsetmacro{\LeftMargin}{\BorderInset}
+    \pgfmathsetmacro{\RightMargin}{\BorderInset}
+    \pgfmathsetmacro{\TopMargin}{\BorderInset}
+    \pgfmathsetmacro{\BottomMargin}{\BorderInset}
+    \pgfmathsetmacro{\HeartStep}{0.78}
+    \pgfmathsetmacro{\HeartScale}{0.105}
+    \pgfmathsetmacro{\HorizontalSpan}{\PageW - \LeftMargin - \RightMargin}
+    \pgfmathsetmacro{\VerticalSpan}{\PageH - \TopMargin - \BottomMargin}
+    \pgfmathtruncatemacro{\HorizontalCount}{floor(\HorizontalSpan / \HeartStep)}
+    \pgfmathtruncatemacro{\VerticalCount}{floor(\VerticalSpan / \HeartStep)}
+    \pgfmathsetmacro{\HorizontalStep}{\HorizontalSpan / \HorizontalCount}
+    \pgfmathsetmacro{\VerticalStep}{\VerticalSpan / \VerticalCount}
+
+    \draw[
+      heartborderred!55,
+      line width=0.35pt,
+      rounded corners=2pt
+    ]
+      ($(current page.south west)+(\LeftMargin,\BottomMargin)$)
+      rectangle
+      ($(current page.north east)+(-\RightMargin,-\TopMargin)$);
+
+    \foreach \i in {0,...,\HorizontalCount} {
+      \pgfmathsetmacro{\X}{\LeftMargin + \i*\HorizontalStep}
+      \pic[scale=\HeartScale] at
+        ($(current page.north west)+(\X,-\TopMargin)$) {decorative heart};
+      \pic[scale=\HeartScale, rotate=180] at
+        ($(current page.south west)+(\X,\BottomMargin)$) {decorative heart};
+    }
+
+    \foreach \i in {0,...,\VerticalCount} {
+      \pgfmathsetmacro{\Y}{\BottomMargin + \i*\VerticalStep}
+      \pic[scale=\HeartScale, rotate=90] at
+        ($(current page.south west)+(\LeftMargin,\Y)$) {decorative heart};
+      \pic[scale=\HeartScale, rotate=-90] at
+        ($(current page.south east)+(-\RightMargin,\Y)$) {decorative heart};
+    }
+  \end{tikzpicture}%
+}
+\makeatother
+
+\AddToHook{shipout/foreground}{\DecorativePageBorder}
