@@ -1,0 +1,3 @@
+# why this workspace?
+
+https://github.com/a0kuma/ckptTry/commit/5c9909553fc3581ae369f7c6feb2c149a344a635#diff-7563393623695e47a1d802f3ea73f680cf713fe7d4b13e7408f58a948e361ca2R1136

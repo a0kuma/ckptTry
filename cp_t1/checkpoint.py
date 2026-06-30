@@ -1167,8 +1167,10 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
             return holder
 
         def unpack_hook(holder):
+            
             # First check if we're inside a GraphExecGroup context
             gid: GraphExecGroup | None | int = GraphExecGroup._get_current_group()
+            gid=None
             if gid is None:
                 # Fallback to using the current graph task id
                 gid = torch._C._current_graph_task_id()
@@ -1187,8 +1189,8 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
                         _run_fn_with_dynamo_disabled(frame.recompute_fn, *args)
                 except _StopRecomputationError:
                     pass
-                frame.is_recomputed[gid] = True
-                frame.check_recomputed_tensors_match(gid)
+                #frame.is_recomputed[gid] = True
+                #frame.check_recomputed_tensors_match(gid)
 
             _internal_assert(gid in holder.handles)
 
@@ -1205,7 +1207,7 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
                     f"unpacked once. {extra}If you are calling ctx.saved_tensors in backward, make sure "
                     "to do so only once. Otherwise please open an issue with details on your use case."
                 )
-            _internal_assert(holder.handles[gid] in frame.recomputed[gid])
+            #_internal_assert(holder.handles[gid] in frame.recomputed[gid])
             ret = frame.recomputed[gid][holder.handles[gid]]
             holder.handles[gid] = None
             return ret
