@@ -21,9 +21,6 @@ from torch.utils._python_dispatch import TorchDispatchMode
 from torch._C._autograd import _make_saved_tensor, SavedTensor
 from typing import NoReturn
 
-from icecream import ic
-ic.configureOutput(includeContext=True)
-
 __all__ = [
     "checkpoint",
     "checkpoint_sequential",
@@ -1126,9 +1123,6 @@ class _recomputation_hook(torch.autograd.graph.saved_tensors_hooks):
             if holder is not None:
                 _internal_assert(holder.handles.get(gid, None) is None)
                 holder.handles[gid] = _Handle()
-                
-                ic(holder.handles)
-                ic(holder.dbg)
                 target_frame.recomputed[gid][holder.handles[gid]] = x
 
             if target_frame.early_stop and target_frame.recomp_counter[gid] == len(
@@ -1166,32 +1160,11 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
             if frame.metadata_fn is not None:
                 with torch.no_grad():
                     frame.x_metadatas.append(frame.metadata_fn(x))
-            #ic(type(holder.handles))
-            #ic(dir(holder.handles))
-            #ic(holder.handles)
-            kind = "unknown"
-
-            if x.is_leaf and x.requires_grad:
-                kind = "PARAM_OR_INPUT_LEAF"
-
-            if x.grad_fn is not None:
-                kind = "ACTIVATION"
-
-            holder.dbg = {
-                "kind": kind,
-                "shape": tuple(x.shape),
-                "requires_grad": x.requires_grad,
-                "is_leaf": x.is_leaf,
-                "grad_fn": type(x.grad_fn).__name__ if x.grad_fn is not None else None,
-                "data_ptr": x.data_ptr() if x.device.type == "cuda" else None,
-            }
-
             return holder
 
         def unpack_hook(holder):
             # First check if we're inside a GraphExecGroup context
             gid: GraphExecGroup | None | int = GraphExecGroup._get_current_group()
-            ic(gid)
             if gid is None:
                 # Fallback to using the current graph task id
                 gid = torch._C._current_graph_task_id()
@@ -1199,8 +1172,6 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
                     # generate a temporary id if we trigger unpack outside of a backward call
                     gid = int(uuid.uuid4())
 
-            ic(gid)
-            ic(frame.is_recomputed[gid])
             if not frame.is_recomputed[gid]:
                 args = frame.get_inputs()
 
@@ -1209,9 +1180,6 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
                         weakref.ref(frame), gid
                     ), torch.autograd.enable_grad():
                         # See Note: [compiled autograd and checkpoint unpack hook]
-                        ic(frame.recompute_fn)
-                        ic(args)
-                        ic(dir(frame.recompute_fn))
                         _run_fn_with_dynamo_disabled(frame.recompute_fn, *args)
                 except _StopRecomputationError:
                     pass
@@ -1718,7 +1686,6 @@ def _checkpoint_without_reentrant_generator(
                 nested_fx_trace_ctx,
             ):  # type: ignore[attr-defined]
                 fn(*args, **kwargs)
-    ic(recompute_fn)
 
     new_frame = _CheckpointFrame(
         recompute_fn,
