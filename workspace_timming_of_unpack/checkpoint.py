@@ -1133,11 +1133,13 @@ class _recomputation_hook(torch.autograd.graph.saved_tensors_hooks):
             ):
                 raise _StopRecomputationError
             # See Rule 6: [ retain_graph is True ] above
+            ic("pack recomputation hook")#, x, x.shape)
             return x
 
         def unpack_hook(x):
             # See Rule 6: [ retain_graph is True ] above for an example of when
             # the graph created during recomputation could be backwarded.
+            #ic("unpack recomputation hook")
             return x
 
         super().__init__(pack_hook, unpack_hook)
@@ -1163,9 +1165,11 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
             if frame.metadata_fn is not None:
                 with torch.no_grad():
                     frame.x_metadatas.append(frame.metadata_fn(x))
+            ic("checkpoint pack hook",holder)
             return holder
 
         def unpack_hook(holder):
+            ic("start of checkpoint unpack hook", holder)
             # First check if we're inside a GraphExecGroup context
             gid: GraphExecGroup | None | int = GraphExecGroup._get_current_group()
             if gid is None:
@@ -1207,6 +1211,7 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
             _internal_assert(holder.handles[gid] in frame.recomputed[gid])
             ret = frame.recomputed[gid][holder.handles[gid]]
             holder.handles[gid] = None
+            ic("checkpoint unpack hook", ret.shape)
             return ret
 
         if frame.unpack_error_cb is not None:
@@ -1696,8 +1701,6 @@ def _checkpoint_without_reentrant_generator(
         unpack_error_cb,
         metadata_fn
     )
-
-    ic(new_frame)
 
     if not torch.is_grad_enabled():
         yield
