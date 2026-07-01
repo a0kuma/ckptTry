@@ -21,9 +21,6 @@ from torch.utils._python_dispatch import TorchDispatchMode
 from torch._C._autograd import _make_saved_tensor, SavedTensor
 from typing import NoReturn
 
-from icecream import ic
-ic.configureOutput(includeContext=True)
-
 __all__ = [
     "checkpoint",
     "checkpoint_sequential",
@@ -1696,8 +1693,6 @@ def _checkpoint_without_reentrant_generator(
         unpack_error_cb,
         metadata_fn
     )
-
-    ic(new_frame)
 
     if not torch.is_grad_enabled():
         yield
