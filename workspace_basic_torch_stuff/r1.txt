@@ -1,0 +1,17 @@
+(sum26) andy@140:~/playground/ckptTry/workspace_basic_torch_stuff$ python i2.py
+ic| i2.py:18 in s1()- '->->->->|||||--------'
+ic| i2.py:23 in s2()- '--------|||||->->->->'
+ic| i2.py:38 in gfh_p1()- 'grad fn hook pre'
+ic| i2.py:28 in b1()- '--------|||||<-<-<-<-'
+<sys>:0: UserWarning: Full backward hook is firing when gradients are computed with respect to module outputs since no inputs require gradients. See https://docs.pytorch.org/docs/main/generated/torch.nn.Module.html#torch.nn.Module.register_full_backward_hook for more details.
+ic| i2.py:33 in b2()- '<-<-<-<-|||||--------'
+ic| i2.py:40 in gfh1()- 'grad fn hook'
+ic| i2.py:42 in gfh_p2()- 'grad fn hook pre'
+ic| i2.py:44 in gfh2()- 'grad fn hook'
+ic| i2.py:46 in gfh_p3()- 'grad fn hook pre'
+ic| i2.py:48 in gfh3()- 'grad fn hook'
+ic| i2.py:50 in gfh_p4()- 'grad fn hook pre'
+ic| i2.py:52 in gfh4()- 'grad fn hook'
+ic| i2.py:54 in gfh_p5()- 'grad fn hook pre'
+ic| i2.py:56 in gfh5()- 'grad fn hook'
+

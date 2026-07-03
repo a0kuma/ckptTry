@@ -1,0 +1,44 @@
+ic| i3.py:18 in <module>
+    dir(y1.grad_fn): ['__call__',
+                      '__class__',
+                      '__delattr__',
+                      '__dir__',
+                      '__doc__',
+                      '__eq__',
+                      '__format__',
+                      '__ge__',
+                      '__getattribute__',
+                      '__getstate__',
+                      '__gt__',
+                      '__hash__',
+                      '__init__',
+                      '__init_subclass__',
+                      '__le__',
+                      '__lt__',
+                      '__ne__',
+                      '__new__',
+                      '__reduce__',
+                      '__reduce_ex__',
+                      '__repr__',
+                      '__setattr__',
+                      '__sizeof__',
+                      '__str__',
+                      '__subclasshook__',
+                      '_input_metadata',
+                      '_register_hook_dict',
+                      '_saved_dim',
+                      '_saved_self_sym_sizes',
+                      '_sequence_nr',
+                      '_set_sequence_nr',
+                      'metadata',
+                      'name',
+                      'next_functions',
+                      'register_hook',
+                      'register_prehook',
+                      'requires_grad']
+ic| i3.py:19 in <module>- y1.grad_fn._saved_dim: 0
+ic| i3.py:20 in <module>- type(y1.grad_fn._saved_dim): <class 'int'>
+ic| i3.py:21 in <module>- y1.grad_fn._saved_self_sym_sizes: (1, 3)
+ic| i3.py:22 in <module>
+    type(y1.grad_fn._saved_self_sym_sizes): <class 'tuple'>
+(
