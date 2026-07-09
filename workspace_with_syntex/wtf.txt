@@ -1,0 +1,34 @@
+         [31m~[1m^^[0m
+[1m[35mTypeError[0m: [35ma.__exit__() takes 1 positional argument but 4 were given[39m
+(sum26) [1m[32mandy@140[0m:[1m[34m~/playground/ckptTry/workspace_with_syntex[0m$ python duck_it_if_i_have_a_call_in_class_it_is_function_like_wtf.py
+[38;5;247mic[38;5;245m| [38;5;32mself[38;5;245m: <[38;5;247m__main__[38;5;245m.[38;5;247ma[38;5;245m [38;5;32mobject[38;5;245m [38;5;247mat[38;5;245m [38;5;36m0x77244290b230[38;5;245m>[39m
+[38;5;247mic[38;5;245m| [38;5;247mb[38;5;245m: [38;5;100mNone[39m
+(sum26) [1m[32mandy@140[0m:[1m[34m~/playground/ckptTry/workspace_with_syntex[0m$ python duck_it_if_i_have_a_call_in_class_it_is_function_like_wtf.py
+[38;5;247mic[38;5;245m| [38;5;32mself[38;5;245m: <[38;5;247m__main__[38;5;245m.[38;5;247ma[38;5;245m [38;5;32mobject[38;5;245m [38;5;247mat[38;5;245m [38;5;36m0x74a88abfb230[38;5;245m>[39m
+[38;5;247mic[38;5;245m| [38;5;247mb[38;5;245m: [38;5;36m123[39m
+(sum26) [1m[32mandy@140[0m:[1m[34m~/playground/ckptTry/workspace_with_syntex[0m$ python duck_it_if_i_have_a_call_in_class_it_is_function_like_wtf.py
+[38;5;247mic[38;5;245m| [38;5;32mself[38;5;245m: <[38;5;247m__main__[38;5;245m.[38;5;247ma[38;5;245m [38;5;32mobject[38;5;245m [38;5;247mat[38;5;245m [38;5;36m0x74ee33407230[38;5;245m>[39m
+Traceback (most recent call last):
+  File [35m"/home/andy/playground/ckptTry/workspace_with_syntex/duck_it_if_i_have_a_call_in_class_it_is_function_like_wtf.py"[39m, line [35m12[39m, in [35m<modu
+le>[39m
+    with a() as b, [1m[31mc[0m:
+                   [1m[31m^[0m
+[1m[35mNameError[0m: [35mname 'c' is not defined. Did you mean: 'ic'?[39m
+(sum26) [1m[32mandy@140[0m:[1m[34m~/playground/ckptTry/workspace_with_syntex[0m$ python duck_it_if_i_have_a_call_in_class_it_is_function_like_wtf.py
+[38;5;247mic[38;5;245m| [38;5;32mself[38;5;245m: <[38;5;247m__main__[38;5;245m.[38;5;247ma[38;5;245m [38;5;32mobject[38;5;245m [38;5;247mat[38;5;245m [38;5;36m0x764a1810b230[38;5;245m>[39m
+[38;5;247mic[38;5;245m| [38;5;247mz[38;5;245m: (<[38;5;247m__main__[38;5;245m.[38;5;247ma[38;5;245m [38;5;32mobject[38;5;245m [38;5;247mat[38;5;245m [38;5;36m0x764a1810b230[38;5;245m>, [38;5;36m123[38;5;245m)[39m
+(sum26) [1m[32mandy@140[0m:[1m[34m~/playground/ckptTry/workspace_with_syntex[0m$ python duck_it_if_i_have_a_call_in_class_it_is_function_like_wtf.py ^C
+(sum26) [1m[32mandy@140[0m:[1m[34m~/playground/ckptTry/workspace_with_syntex[0m$ python wo_return_when_init.py
+[38;5;247mic[38;5;245m| [38;5;247ma[38;5;245m: <[38;5;100mclass[38;5;234m [38;5;166m'[38;5;32m__main__[38;5;245m.[38;5;247ma[38;5;36m'>[39m
+[38;5;247mic[38;5;245m| [38;5;32mtype[38;5;245m([38;5;247ma[38;5;245m): <[38;5;100mclass[38;5;234m [38;5;166m'[38;5;32mtype[38;5;36m'>[39m
+[38;5;247mic[38;5;245m| [38;5;247mb[38;5;245m: <[38;5;247m__main__[38;5;245m.[38;5;247ma[38;5;245m [38;5;32mobject[38;5;245m [38;5;247mat[38;5;245m [38;5;36m0x7a27c1728050[38;5;245m>[39m
+[38;5;247mic[38;5;245m| [38;5;32mtype[38;5;245m([38;5;247mb[38;5;245m): <[38;5;100mclass[38;5;234m [38;5;166m'[38;5;32m__main__[38;5;245m.[38;5;247ma[38;5;36m'>[39m
+(sum26) [1m[32mandy@140[0m:[1m[34m~/playground/ckptTry/workspace_with_syntex[0m$ python wo_return_when_init.py
+[38;5;247mic[38;5;245m| [38;5;247ma[38;5;245m: <[38;5;100mclass[38;5;234m [38;5;166m'[38;5;32m__main__[38;5;245m.[38;5;247ma[38;5;36m'>[39m
+[38;5;247mic[38;5;245m| [38;5;32mtype[38;5;245m([38;5;247ma[38;5;245m): <[38;5;100mclass[38;5;234m [38;5;166m'[38;5;32mtype[38;5;36m'>[39m
+Traceback (most recent call last):
+  File [35m"/home/andy/playground/ckptTry/workspace_with_syntex/wo_return_when_init.py"[39m, line [35m7[39m, in [35m<module>[39m
+    b=a()
+[1m[35mTypeError[0m: [35m__init__() should return None, not 'a'[39m
+(sum26) [1m[32mandy@140[0m:[1m[34m~/playground/ckptTry/workspace_with_syntex[0m$ tmux capture-pane -p -e > wtf.txt
+
