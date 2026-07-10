@@ -1,0 +1,1 @@
+why def del ... error when call del at time when ref to someone else
