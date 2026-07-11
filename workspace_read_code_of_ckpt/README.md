@@ -1,6 +1,6 @@
 # shift down line number
 
-`+2`
+`0`
 
 # note
 
@@ -32,4 +32,22 @@ i need to check if it is the "store activation" stuff
 
 line 1158( / keywords _checkpoint_hook)
 
+### the answer is yes
+
+## i think we will have 2 frame (diff)
+
+1. is the fwd frame (org)
+2. is the recompute frame (new)
+
+### lets test it out 
+
+so ... the ans is NO
+
+it is per "CKPT segment"
+
+## so ... i need to know 
+
+if the pack hook in _checkpoint_hook is called only in the FWD PATH or BOTH fwd and re-fwd
+
+(line around 1156) , use new ckpt file
 

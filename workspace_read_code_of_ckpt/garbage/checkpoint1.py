@@ -22,7 +22,7 @@ from torch._C._autograd import _make_saved_tensor, SavedTensor
 from typing import NoReturn
 
 from icecream import ic
-ic.configureOutput(includeContext=True) 
+ic.configureOutput(includeContext=True)
 
 __all__ = [
     "checkpoint",
@@ -519,7 +519,9 @@ def checkpoint(
         # Runs pre-forward logic
         next(gen)
         try:
+            ic('before ret')
             ret = function(*args, **kwargs)
+            ic('after ret')
         except BaseException as e:
             try:
                 gen.throw(e)
@@ -817,6 +819,7 @@ class _Holder:
 
 
 class _CheckpointFrame:
+    int_cc = 0
     def __init__(self, recompute_fn, early_stop, unpack_error_cb, metadata_fn) -> None:
         self.recompute_fn = recompute_fn
         self.saved_args: List[Any] = []
@@ -841,6 +844,10 @@ class _CheckpointFrame:
         self.x_metadatas = []
         self.forward_completed = False
         self.ignore_saved_mismatch = False
+        
+        self.just_for_debug_andy = 'ORG'
+        _CheckpointFrame.int_cc = _CheckpointFrame.int_cc + 1
+        ic(_CheckpointFrame.int_cc)
 
     def save_inputs(self, *args):
         self.saved_args = [
@@ -1156,19 +1163,19 @@ def _run_fn_with_dynamo_disabled(fn, *args, **kwargs):
 class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
     def __init__(self, frame) -> None:
         def pack_hook(x):
-            ic(x)
             # See Rule 4 above
             holder = _Holder()
             frame.weak_holders.append(weakref.ref(holder))
+            
+            ic(frame.just_for_debug_andy)
+
             # Save metadata to detect non-determinism
             if frame.metadata_fn is not None:
                 with torch.no_grad():
                     frame.x_metadatas.append(frame.metadata_fn(x))
-            ic(holder)
             return holder
 
         def unpack_hook(holder):
-            ic(holder)
             # First check if we're inside a GraphExecGroup context
             gid: GraphExecGroup | None | int = GraphExecGroup._get_current_group()
             if gid is None:
@@ -1210,7 +1217,6 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
             _internal_assert(holder.handles[gid] in frame.recomputed[gid])
             ret = frame.recomputed[gid][holder.handles[gid]]
             holder.handles[gid] = None
-            ic(ret)
             return ret
 
         if frame.unpack_error_cb is not None:
@@ -1701,16 +1707,23 @@ def _checkpoint_without_reentrant_generator(
         metadata_fn
     )
 
+    new_frame.just_for_debug_andy = 'NEW FRAME'
+
     if not torch.is_grad_enabled():
+        ic('this is berore yield')
         yield
+        ic('this is after yield')
         return
 
     new_frame.save_inputs(*args)
 
     forward_context_suppressed_exc = False
+    ic(new_frame)
     with _checkpoint_hook(new_frame), forward_context:
         try:
+            ic('this is before yield')
             yield
+            ic('this is after yield')
         except BaseException:
             forward_context_suppressed_exc = True
             raise

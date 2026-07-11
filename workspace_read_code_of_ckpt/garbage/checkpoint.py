@@ -22,7 +22,7 @@ from torch._C._autograd import _make_saved_tensor, SavedTensor
 from typing import NoReturn
 
 from icecream import ic
-ic.configureOutput(includeContext=True) 
+ic.configureOutput(includeContext=True)
 
 __all__ = [
     "checkpoint",
@@ -1164,11 +1164,9 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
             if frame.metadata_fn is not None:
                 with torch.no_grad():
                     frame.x_metadatas.append(frame.metadata_fn(x))
-            ic(holder)
             return holder
 
         def unpack_hook(holder):
-            ic(holder)
             # First check if we're inside a GraphExecGroup context
             gid: GraphExecGroup | None | int = GraphExecGroup._get_current_group()
             if gid is None:
@@ -1210,7 +1208,6 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
             _internal_assert(holder.handles[gid] in frame.recomputed[gid])
             ret = frame.recomputed[gid][holder.handles[gid]]
             holder.handles[gid] = None
-            ic(ret)
             return ret
 
         if frame.unpack_error_cb is not None:
@@ -1662,6 +1659,7 @@ def _checkpoint_without_reentrant_generator(
     is_non_strict_tracing = torch.compiler._is_non_strict_tracing()
 
     def recompute_fn(*args) -> None:
+        ic(args)
         # This will be called later during recomputation. This wrapping enables
         # the necessary global state to be captured.
         rng_devices = []
@@ -1692,6 +1690,7 @@ def _checkpoint_without_reentrant_generator(
                 device_ctx,
                 nested_fx_trace_ctx,
             ):  # type: ignore[attr-defined]
+                ic(args,kwargs)
                 fn(*args, **kwargs)
 
     new_frame = _CheckpointFrame(
