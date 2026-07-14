@@ -1120,6 +1120,7 @@ class _recomputation_hook(torch.autograd.graph.saved_tensors_hooks):
                 )
 
             holder = target_frame.weak_holders[recomp_idx]()
+            ic(target_frame.weak_holders)
 
             # This holder may have been cleared because someone may have called
             # backward within forward. If so, we don't need to save.

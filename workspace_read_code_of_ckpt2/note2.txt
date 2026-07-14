@@ -1,0 +1,6 @@
+around line 829 in ckpt py
+the self recomputed line
+inside the struct, the int is gid
+and inside each gid is a weak ket dict 
+but what is handle
+it is a fucking empty object line 810
