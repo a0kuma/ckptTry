@@ -1,0 +1,12 @@
+if i do around line 1183 if not frame is recomputed disable this line, what will happen ?
+
+frame need to be reused...?
+
+i will need to list out all effeccted  prams
+
+from 823
+
+1. weak holders
+2. recomputed
+3. recomp counter
+4. is recomputed

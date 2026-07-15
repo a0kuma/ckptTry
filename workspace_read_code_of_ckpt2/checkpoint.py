@@ -1120,7 +1120,7 @@ class _recomputation_hook(torch.autograd.graph.saved_tensors_hooks):
                 )
 
             holder = target_frame.weak_holders[recomp_idx]()
-            ic(target_frame.weak_holders)
+            ic(holder.handles)
 
             # This holder may have been cleared because someone may have called
             # backward within forward. If so, we don't need to save.
@@ -1159,7 +1159,11 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
         def pack_hook(x):
             # See Rule 4 above
             holder = _Holder()
-            frame.weak_holders.append(weakref.ref(holder))
+            tmp_a=weakref.ref(holder)
+            ic(x,tmp_a)
+            frame.weak_holders.append(tmp_a)
+            #frame.weak_holders.append(weakref.ref(holder))
+            
             # Save metadata to detect non-determinism
             if frame.metadata_fn is not None:
                 with torch.no_grad():
@@ -1185,7 +1189,7 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
                     ), torch.autograd.enable_grad():
                         # See Note: [compiled autograd and checkpoint unpack hook]
                         _run_fn_with_dynamo_disabled(frame.recompute_fn, *args)
-                        ic(frame.recomputed[0])
+                        #ic(frame.recomputed[0])
                 except _StopRecomputationError:
                     pass
                 frame.is_recomputed[gid] = True
