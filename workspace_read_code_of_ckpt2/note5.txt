@@ -10,3 +10,7 @@ from 823
 2. recomputed
 3. recomp counter
 4. is recomputed
+
+there is a important thing
+
+how to deep copy the object
