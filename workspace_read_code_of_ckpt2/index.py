@@ -12,7 +12,8 @@ ic.configureOutput(includeContext=True)
 torch.cuda.memory._record_memory_history()
 
 model = nn.Sequential(
-    nn.Linear(2, 3, bias = False, device='cuda'),
+    nn.Linear(2, 7, bias = False, device='cuda'),
+    nn.Linear(7, 3, bias = False, device='cuda'),
     nn.Linear(3, 5, bias = False, device='cuda')
 )
 
@@ -30,4 +31,4 @@ y = checkpoint.checkpoint(
 loss = torch.ones_like(y)
 y.backward(loss)
 
-torch.cuda.memory._dump_snapshot('abc.pickle')
+torch.cuda.memory._dump_snapshot('abc_new_song.pickle')
