@@ -21,10 +21,6 @@ from torch.utils._python_dispatch import TorchDispatchMode
 from torch._C._autograd import _make_saved_tensor, SavedTensor
 from typing import NoReturn
 
-from icecream import ic
-ic.configureOutput(includeContext=True)
-import copy
-
 __all__ = [
     "checkpoint",
     "checkpoint_sequential",
@@ -842,24 +838,6 @@ class _CheckpointFrame:
         self.x_metadatas = []
         self.forward_completed = False
         self.ignore_saved_mismatch = False
-    
-    def dc4(self):
-        self.d4_weak_holders = copy.deepcopy(self.weak_holders)
-        self.d4_recomputed = copy.deepcopy(self.recomputed)
-        self.d4_recomp_counter = copy.deepcopy(self.recomp_counter)
-        self.d4_is_recomputed = copy.deepcopy(self.is_recomputed)
-    def dc4r(self):
-        self.weak_holders = copy.deepcopy(self.d4_weak_holders)
-        self.recomputed = copy.deepcopy(self.d4_recomputed)
-        self.recomp_counter = copy.deepcopy(self.d4_recomp_counter)
-        self.is_recomputed = copy.deepcopy(self.d4_is_recomputed)
-    def dc4p(self):
-        print(self.d4_weak_holders)
-        print(self.d4_recomputed)
-        print(self.d4_recomp_counter)
-        print(self.d4_is_recomputed)
-    
-     
 
     def save_inputs(self, *args):
         self.saved_args = [
@@ -1143,7 +1121,7 @@ class _recomputation_hook(torch.autograd.graph.saved_tensors_hooks):
             # This holder may have been cleared because someone may have called
             # backward within forward. If so, we don't need to save.
             if holder is not None:
-                #_internal_assert(holder.handles.get(gid, None) is None)
+                _internal_assert(holder.handles.get(gid, None) is None)
                 holder.handles[gid] = _Handle()
                 target_frame.recomputed[gid][holder.handles[gid]] = x
 
@@ -1185,9 +1163,6 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
             return holder
 
         def unpack_hook(holder):
-            print(holder)
-            frame.dc4p()
-            frame.dc4r()
             # First check if we're inside a GraphExecGroup context
             gid: GraphExecGroup | None | int = GraphExecGroup._get_current_group()
             if gid is None:
@@ -1209,9 +1184,9 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
                 except _StopRecomputationError:
                     pass
                 frame.is_recomputed[gid] = True
-                #frame.check_recomputed_tensors_match(gid)
+                frame.check_recomputed_tensors_match(gid)
 
-            #_internal_assert(gid in holder.handles)
+            _internal_assert(gid in holder.handles)
 
             if holder.handles[gid] is None:
                 extra = ""
@@ -1744,7 +1719,6 @@ def _checkpoint_without_reentrant_generator(
             "cannot return a value for a failed forward."
         )
     new_frame.forward_completed = True
-    new_frame.dc4()
 
     if getattr(device_module, "_initialized", False) and \
        preserve_rng_state and not had_device_in_fwd:  # type: ignore[possibly-undefined]

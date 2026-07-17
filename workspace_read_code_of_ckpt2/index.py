@@ -24,11 +24,11 @@ y = checkpoint.checkpoint(
     input=x,
     determinism_check='none',
     debug=False,
-    early_stop=False,
+    early_stop=True,
     use_reentrant=False
 )
 
 loss = torch.ones_like(y)
 y.backward(loss)
 
-torch.cuda.memory._dump_snapshot('abc_new_song.pickle')
+torch.cuda.memory._dump_snapshot('abc_org_ES.pickle')
