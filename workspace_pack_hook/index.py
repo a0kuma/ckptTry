@@ -4,8 +4,6 @@ os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":0:0"
 
 import torch
 import torch.nn as nn
-#import torch.utils.checkpoint as checkpoint
-#import checkpoint
 from icecream import ic
 ic.configureOutput(includeContext=True)
 
@@ -18,22 +16,19 @@ model = nn.Sequential(
 
 x = torch.randn(1, 2,  device='cuda')
 
-#y = checkpoint.checkpoint(
-#    model,
-#    input=x,
-#    determinism_check='none',
-#    debug=False,
-#    early_stop=False,
-#    use_reentrant=False
-#)
-
 def pack_hook(i):
-  ic(i)
   return i
+  #if any( i.untyped_storage().data_ptr() == tmp_p.untyped_storage().data_ptr() for tmp_l in model for tmp_p in tmp_l.parameters()):
+    #return i
+  #else:
+    #return i
 
 def unpack_hook(i):
-  ic(i)
   return i
+  #if hasattr( i, 'untyped_storage' ) and any( i.untyped_storage().data_ptr() == tmp_p.untyped_storage().data_ptr() for tmp_l in model for tmp_p in tmp_l.parameters()):
+    #return i
+  #else:
+    #return i
 
 with torch.autograd.graph.saved_tensors_hooks(
   pack_hook,
@@ -43,4 +38,4 @@ with torch.autograd.graph.saved_tensors_hooks(
   loss = torch.ones_like(y)
 y.backward(loss)
 
-torch.cuda.memory._dump_snapshot('abc.pickle')
+torch.cuda.memory._dump_snapshot('abc_wo_if.pickle')
