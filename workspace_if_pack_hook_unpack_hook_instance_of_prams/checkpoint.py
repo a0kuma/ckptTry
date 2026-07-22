@@ -1158,6 +1158,7 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
     def __init__(self, frame) -> None:
         def pack_hook(x):
             if any( x.untyped_storage().data_ptr() == tmp_p.untyped_storage().data_ptr() for tmp_l in frame.ff() for tmp_p in tmp_l.parameters()  ):
+              print(x)
               return (x)
 
             # See Rule 4 above
@@ -1170,8 +1171,9 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
             return holder
 
         def unpack_hook(holder):
-            if any( x.untyped_storage().data_ptr() == tmp_p.untyped_storage().data_ptr() for tmp_l in frame.ff() for tmp_p in tmp_l.parameters()  ):
-              return (x)
+            if hasattr( holder, 'untyped_storage' ) and any( holder.untyped_storage().data_ptr() == tmp_p.untyped_storage().data_ptr() for tmp_l in frame.ff() for tmp_p in tmp_l.parameters()  ):
+              print(holder)
+              return (holder)
 
 
 
