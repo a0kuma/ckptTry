@@ -20,7 +20,7 @@ def pack_hook(i):
   #return i
   if any( i.untyped_storage().data_ptr() == tmp_p.untyped_storage().data_ptr() for tmp_l in model for tmp_p in tmp_l.parameters()):
     ic(i)
-    return torch.ones(3,6,device='cuda')
+    return torch.ones(4, 5, device='cuda')
   else:
     ic(i)
     return i
