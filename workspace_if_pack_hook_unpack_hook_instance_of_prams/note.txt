@@ -1,0 +1,1 @@
+what to do next is to check if cuing or not using the if statement will cause diference on memeory

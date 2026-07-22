@@ -1157,13 +1157,8 @@ def _run_fn_with_dynamo_disabled(fn, *args, **kwargs):
 class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
     def __init__(self, frame) -> None:
         def pack_hook(x):
-            #ic(x)
-            ic(next(frame.ff()[1].parameters()).untyped_storage().data_ptr())
-            #ic(type(frame.ff()))
-            #ic(dir(frame.ff()))
-            #ic(type(x))
-            #ic(dir(x))            
-            ic(x.untyped_storage().data_ptr())
+            if any( x.untyped_storage().data_ptr() == tmp_p.untyped_storage().data_ptr() for tmp_l in frame.ff() for tmp_p in tmp_l.parameters()  ):
+              return (x)
 
             # See Rule 4 above
             holder = _Holder()
@@ -1175,6 +1170,11 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
             return holder
 
         def unpack_hook(holder):
+            if any( x.untyped_storage().data_ptr() == tmp_p.untyped_storage().data_ptr() for tmp_l in frame.ff() for tmp_p in tmp_l.parameters()  ):
+              return (x)
+
+
+
             # First check if we're inside a GraphExecGroup context
             gid: GraphExecGroup | None | int = GraphExecGroup._get_current_group()
             if gid is None:
