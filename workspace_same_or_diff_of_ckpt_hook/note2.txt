@@ -1,0 +1,4 @@
+so now its saying that maybe the recompute index is fucked up , so we now need to see before and after we edit the code does the recompute index change?
+
+first log this recomp_idx = target_frame.recomp_counter[gid]
+

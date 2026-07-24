@@ -1,0 +1,4 @@
+結論是這樣的
+1. 我以為id是每一個layer要重算的那個id
+但只是layer count因為重算only once
+2. 所以id是在unpack hook 的第一次進入函數 後 ； 離開unpack前

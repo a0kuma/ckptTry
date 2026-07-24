@@ -817,8 +817,7 @@ class _Holder:
 
 
 class _CheckpointFrame:
-    def __init__(self, ff, recompute_fn, early_stop, unpack_error_cb, metadata_fn) -> None:
-        self.ff=ff
+    def __init__(self, recompute_fn, early_stop, unpack_error_cb, metadata_fn) -> None:
         self.recompute_fn = recompute_fn
         self.saved_args: List[Any] = []
         self.weak_holders: List[ReferenceType] = []
@@ -877,7 +876,7 @@ class _CheckpointFrame:
         if not len(self.weak_holders) == self.recomp_counter[gid]:
             # 2. During recompute, fewer tensors were saved
             #
-            # We know that every time we save something do original forward
+            # We know that every time we save something during original forward
             # we append to weak_holder, and every time we save a tensor
             # during recompute we increment recompute_counter.
             raise CheckpointError(
@@ -1101,6 +1100,7 @@ class _recomputation_hook(torch.autograd.graph.saved_tensors_hooks):
             if target_frame is None:
                 raise AssertionError("Internal error: target_frame reference is None")
             recomp_idx = target_frame.recomp_counter[gid]
+            ic(recomp_idx)
             target_frame.recomp_counter[gid] += 1
 
             if recomp_idx >= len(target_frame.weak_holders):
@@ -1157,34 +1157,17 @@ def _run_fn_with_dynamo_disabled(fn, *args, **kwargs):
 class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
     def __init__(self, frame) -> None:
         def pack_hook(x):
-            holder = _Holder()
-            if any( x.untyped_storage().data_ptr() == tmp_p.untyped_storage().data_ptr() for tmp_l in frame.ff() for tmp_p in tmp_l.parameters()  ):
-              holder.tmp_dbg = x#weakref.ref(x) 
-              return (x)
-
             # See Rule 4 above
-            #holder = _Holder()
+            holder = _Holder()
             frame.weak_holders.append(weakref.ref(holder))
             # Save metadata to detect non-determinism
             if frame.metadata_fn is not None:
                 with torch.no_grad():
                     frame.x_metadatas.append(frame.metadata_fn(x))
-            #print('>>>>>>>> pack >>>>>>>>>>>>')
-            #print(holder)
-            #print('-------------------------')
             return holder
 
         def unpack_hook(holder):
-            #print('>>>>>>>>>>>>> holder >>>>>>>>>>')
-            #print(holder)
-            #print('------------------------------')
-            if hasattr( holder, 'untyped_storage' ) and any( holder.untyped_storage().data_ptr() == tmp_p.untyped_storage().data_ptr() for tmp_l in frame.ff() for tmp_p in tmp_l.parameters()  ):
-              #print(holder)
-              return (holder)
-            #if hasattr(holder, 'tmp_dbg'):
-              #print(holder.tmp_dbg)
-
-
+            ic(holder)
             # First check if we're inside a GraphExecGroup context
             gid: GraphExecGroup | None | int = GraphExecGroup._get_current_group()
             if gid is None:
@@ -1226,7 +1209,7 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
             _internal_assert(holder.handles[gid] in frame.recomputed[gid])
             ret = frame.recomputed[gid][holder.handles[gid]]
             holder.handles[gid] = None
-            #ic(ret)
+            ic(holder,ret)
             return ret
 
         if frame.unpack_error_cb is not None:
@@ -1715,7 +1698,6 @@ def _checkpoint_without_reentrant_generator(
                 fn(*args, **kwargs)
 
     new_frame = _CheckpointFrame(
-        weakref.ref(fn),
         recompute_fn,
         _enable_checkpoint_early_stop if _enable_checkpoint_early_stop is not None else early_stop,
         unpack_error_cb,
