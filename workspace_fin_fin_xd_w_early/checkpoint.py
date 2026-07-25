@@ -23,6 +23,7 @@ from typing import NoReturn
 
 from icecream import ic
 ic.configureOutput(includeContext=True)
+import copy
 
 __all__ = [
     "checkpoint",
@@ -843,6 +844,22 @@ class _CheckpointFrame:
         self.forward_completed = False
         self.ignore_saved_mismatch = False
 
+    def dc4(self):
+        self.d4_weak_holders = copy.deepcopy(self.weak_holders)
+        self.d4_recomputed = copy.deepcopy(self.recomputed)
+        self.d4_recomp_counter = copy.deepcopy(self.recomp_counter)
+        self.d4_is_recomputed = copy.deepcopy(self.is_recomputed)
+    def dc4r(self):
+        self.weak_holders = copy.deepcopy(self.d4_weak_holders)
+        self.recomputed = copy.deepcopy(self.d4_recomputed)
+        self.recomp_counter = copy.deepcopy(self.d4_recomp_counter)
+        self.is_recomputed = copy.deepcopy(self.d4_is_recomputed)
+    def dc4p(self):
+        print(self.d4_weak_holders)
+        print(self.d4_recomputed)
+        print(self.d4_recomp_counter)
+        print(self.d4_is_recomputed)
+
     def save_inputs(self, *args):
         self.saved_args = [
             _make_saved_tensor(arg, is_output=False)
@@ -1125,7 +1142,7 @@ class _recomputation_hook(torch.autograd.graph.saved_tensors_hooks):
             # This holder may have been cleared because someone may have called
             # backward within forward. If so, we don't need to save.
             if holder is not None:
-                _internal_assert(holder.handles.get(gid, None) is None)
+                #_internal_assert(holder.handles.get(gid, None) is None)
                 holder.handles[gid] = _Handle()
                 target_frame.recomputed[gid][holder.handles[gid]] = x
 
@@ -1174,6 +1191,9 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
         def unpack_hook(holder):
             if hasattr(holder, 'bypass_o_square'):
                 return holder.bypass_o_square
+            #else:
+            frame.dc4r()
+
             # First check if we're inside a GraphExecGroup context
             gid: GraphExecGroup | None | int = GraphExecGroup._get_current_group()
             if gid is None:
@@ -1731,6 +1751,7 @@ def _checkpoint_without_reentrant_generator(
             "cannot return a value for a failed forward."
         )
     new_frame.forward_completed = True
+    new_frame.dc4()
 
     if getattr(device_module, "_initialized", False) and \
        preserve_rng_state and not had_device_in_fwd:  # type: ignore[possibly-undefined]
