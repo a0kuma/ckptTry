@@ -21,6 +21,9 @@ from torch.utils._python_dispatch import TorchDispatchMode
 from torch._C._autograd import _make_saved_tensor, SavedTensor
 from typing import NoReturn
 
+from icecream import ic
+ic.configureOutput(includeContext=True)
+
 __all__ = [
     "checkpoint",
     "checkpoint_sequential",
@@ -814,7 +817,8 @@ class _Holder:
 
 
 class _CheckpointFrame:
-    def __init__(self, recompute_fn, early_stop, unpack_error_cb, metadata_fn) -> None:
+    def __init__(self, ff, recompute_fn, early_stop, unpack_error_cb, metadata_fn) -> None:
+        self.ff=ff
         self.recompute_fn = recompute_fn
         self.saved_args: List[Any] = []
         self.weak_holders: List[ReferenceType] = []
@@ -873,7 +877,7 @@ class _CheckpointFrame:
         if not len(self.weak_holders) == self.recomp_counter[gid]:
             # 2. During recompute, fewer tensors were saved
             #
-            # We know that every time we save something during original forward
+            # We know that every time we save something do original forward
             # we append to weak_holder, and every time we save a tensor
             # during recompute we increment recompute_counter.
             raise CheckpointError(
@@ -1097,6 +1101,7 @@ class _recomputation_hook(torch.autograd.graph.saved_tensors_hooks):
             if target_frame is None:
                 raise AssertionError("Internal error: target_frame reference is None")
             recomp_idx = target_frame.recomp_counter[gid]
+            ic(recomp_idx)
             target_frame.recomp_counter[gid] += 1
 
             if recomp_idx >= len(target_frame.weak_holders):
@@ -1130,6 +1135,7 @@ class _recomputation_hook(torch.autograd.graph.saved_tensors_hooks):
             ):
                 raise _StopRecomputationError
             # See Rule 6: [ retain_graph is True ] above
+            ic(x)
             return x
 
         def unpack_hook(x):
@@ -1153,6 +1159,10 @@ def _run_fn_with_dynamo_disabled(fn, *args, **kwargs):
 class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
     def __init__(self, frame) -> None:
         def pack_hook(x):
+            if any( x.untyped_storage().data_ptr() == tmp_p.untyped_storage().data_ptr() for tmp_l in frame.ff() for tmp_p in tmp_l.parameters()  ):
+              print(x)
+              #return (x)
+
             # See Rule 4 above
             holder = _Holder()
             frame.weak_holders.append(weakref.ref(holder))
@@ -1163,6 +1173,13 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
             return holder
 
         def unpack_hook(holder):
+            ic(holder)
+            if hasattr( holder, 'untyped_storage' ) and any( holder.untyped_storage().data_ptr() == tmp_p.untyped_storage().data_ptr() for tmp_l in frame.ff() for tmp_p in tmp_l.parameters()  ):
+              print(holder)
+              #return (holder)
+
+
+
             # First check if we're inside a GraphExecGroup context
             gid: GraphExecGroup | None | int = GraphExecGroup._get_current_group()
             if gid is None:
@@ -1173,6 +1190,7 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
                     gid = int(uuid.uuid4())
 
             if not frame.is_recomputed[gid]:
+                ic('yes')
                 args = frame.get_inputs()
 
                 try:
@@ -1185,6 +1203,7 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
                     pass
                 frame.is_recomputed[gid] = True
                 frame.check_recomputed_tensors_match(gid)
+                ic('no')
 
             _internal_assert(gid in holder.handles)
 
@@ -1689,9 +1708,11 @@ def _checkpoint_without_reentrant_generator(
                 device_ctx,
                 nested_fx_trace_ctx,
             ):  # type: ignore[attr-defined]
+                ic(fn)
                 fn(*args, **kwargs)
 
     new_frame = _CheckpointFrame(
+        weakref.ref(fn),
         recompute_fn,
         _enable_checkpoint_early_stop if _enable_checkpoint_early_stop is not None else early_stop,
         unpack_error_cb,
