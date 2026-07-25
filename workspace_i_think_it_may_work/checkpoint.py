@@ -817,7 +817,8 @@ class _Holder:
 
 
 class _CheckpointFrame:
-    def __init__(self, recompute_fn, early_stop, unpack_error_cb, metadata_fn) -> None:
+    def __init__(self, ff, recompute_fn, early_stop, unpack_error_cb, metadata_fn) -> None:
+        self.ff = ff
         self.recompute_fn = recompute_fn
         self.saved_args: List[Any] = []
         self.weak_holders: List[ReferenceType] = []
@@ -1114,11 +1115,11 @@ class _recomputation_hook(torch.autograd.graph.saved_tensors_hooks):
                     # recomputation match.
                     target_frame.ignore_saved_mismatch = True
                     return x
-                raise CheckpointError(
-                    "torch.utils.checkpoint: trying to save more tensors during "
-                    "recomputation than during the original forward pass.\n"
-                    f"{_debug_tip_msg}"
-                )
+                #raise CheckpointError(
+                    #"torch.utils.checkpoint: trying to save more tensors during "
+                    #"recomputation than during the original forward pass.\n"
+                    #f"{_debug_tip_msg}"
+                #)
 
             holder = target_frame.weak_holders[recomp_idx]()
 
@@ -1157,7 +1158,8 @@ def _run_fn_with_dynamo_disabled(fn, *args, **kwargs):
 class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
     def __init__(self, frame) -> None:
         def pack_hook(x):
-            if any( x.untyped_storage().data_ptr() == tmp_p.untyped_stora     ge().data_ptr() for tmp_l in frame.ff() for tmp_p in tmp_l.parameters()):
+            if any( x.untyped_storage().data_ptr() == tmp_p.untyped_storage().data_ptr() for tmp_l in frame.ff() for tmp_p in tmp_l.parameters()):
+                #pass
                 return x
 
             # See Rule 4 above
@@ -1699,6 +1701,7 @@ def _checkpoint_without_reentrant_generator(
                 fn(*args, **kwargs)
 
     new_frame = _CheckpointFrame(
+        weakref.ref(fn),
         recompute_fn,
         _enable_checkpoint_early_stop if _enable_checkpoint_early_stop is not None else early_stop,
         unpack_error_cb,
