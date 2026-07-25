@@ -1100,7 +1100,7 @@ class _recomputation_hook(torch.autograd.graph.saved_tensors_hooks):
             if target_frame is None:
                 raise AssertionError("Internal error: target_frame reference is None")
             recomp_idx = target_frame.recomp_counter[gid]
-            #ic(recomp_idx)
+            ic(recomp_idx)
             target_frame.recomp_counter[gid] += 1
 
             if recomp_idx >= len(target_frame.weak_holders):
@@ -1157,6 +1157,9 @@ def _run_fn_with_dynamo_disabled(fn, *args, **kwargs):
 class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
     def __init__(self, frame) -> None:
         def pack_hook(x):
+            if any( x.untyped_storage().data_ptr() == tmp_p.untyped_stora     ge().data_ptr() for tmp_l in frame.ff() for tmp_p in tmp_l.parameters()):
+                return x
+
             # See Rule 4 above
             holder = _Holder()
             frame.weak_holders.append(weakref.ref(holder))
@@ -1167,7 +1170,6 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
             return holder
 
         def unpack_hook(holder):
-            #ic(holder)
             # First check if we're inside a GraphExecGroup context
             gid: GraphExecGroup | None | int = GraphExecGroup._get_current_group()
             if gid is None:
@@ -1178,7 +1180,6 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
                     gid = int(uuid.uuid4())
 
             if not frame.is_recomputed[gid]:
-                #ic('<3')
                 args = frame.get_inputs()
 
                 try:
@@ -1191,7 +1192,6 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
                     pass
                 frame.is_recomputed[gid] = True
                 frame.check_recomputed_tensors_match(gid)
-                #ic('<3')
 
             _internal_assert(gid in holder.handles)
 
@@ -1211,7 +1211,6 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
             _internal_assert(holder.handles[gid] in frame.recomputed[gid])
             ret = frame.recomputed[gid][holder.handles[gid]]
             holder.handles[gid] = None
-            #ic(holder,ret)
             return ret
 
         if frame.unpack_error_cb is not None:
@@ -1697,9 +1696,7 @@ def _checkpoint_without_reentrant_generator(
                 device_ctx,
                 nested_fx_trace_ctx,
             ):  # type: ignore[attr-defined]
-                ic('?>')
                 fn(*args, **kwargs)
-                ic('<?')
 
     new_frame = _CheckpointFrame(
         recompute_fn,

@@ -1161,7 +1161,7 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
         def pack_hook(x):
             if any( x.untyped_storage().data_ptr() == tmp_p.untyped_storage().data_ptr() for tmp_l in frame.ff() for tmp_p in tmp_l.parameters()  ):
               print(x)
-              return (x)
+              #return (x)
 
             # See Rule 4 above
             holder = _Holder()
@@ -1176,7 +1176,7 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
             ic(holder)
             if hasattr( holder, 'untyped_storage' ) and any( holder.untyped_storage().data_ptr() == tmp_p.untyped_storage().data_ptr() for tmp_l in frame.ff() for tmp_p in tmp_l.parameters()  ):
               print(holder)
-              return (holder)
+              #return (holder)
 
 
 
@@ -1708,6 +1708,7 @@ def _checkpoint_without_reentrant_generator(
                 device_ctx,
                 nested_fx_trace_ctx,
             ):  # type: ignore[attr-defined]
+                ic(fn)
                 fn(*args, **kwargs)
 
     new_frame = _CheckpointFrame(
