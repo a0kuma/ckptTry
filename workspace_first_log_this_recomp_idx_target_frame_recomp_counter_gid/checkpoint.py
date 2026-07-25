@@ -1178,6 +1178,7 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
                     gid = int(uuid.uuid4())
 
             if not frame.is_recomputed[gid]:
+                ic('<3')
                 args = frame.get_inputs()
 
                 try:
@@ -1190,6 +1191,7 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
                     pass
                 frame.is_recomputed[gid] = True
                 frame.check_recomputed_tensors_match(gid)
+                ic('<3')
 
             _internal_assert(gid in holder.handles)
 

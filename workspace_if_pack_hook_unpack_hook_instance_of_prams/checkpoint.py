@@ -1101,6 +1101,7 @@ class _recomputation_hook(torch.autograd.graph.saved_tensors_hooks):
             if target_frame is None:
                 raise AssertionError("Internal error: target_frame reference is None")
             recomp_idx = target_frame.recomp_counter[gid]
+            ic(recomp_idx)
             target_frame.recomp_counter[gid] += 1
 
             if recomp_idx >= len(target_frame.weak_holders):
@@ -1134,6 +1135,7 @@ class _recomputation_hook(torch.autograd.graph.saved_tensors_hooks):
             ):
                 raise _StopRecomputationError
             # See Rule 6: [ retain_graph is True ] above
+            ic(x)
             return x
 
         def unpack_hook(x):
@@ -1171,6 +1173,7 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
             return holder
 
         def unpack_hook(holder):
+            ic(holder)
             if hasattr( holder, 'untyped_storage' ) and any( holder.untyped_storage().data_ptr() == tmp_p.untyped_storage().data_ptr() for tmp_l in frame.ff() for tmp_p in tmp_l.parameters()  ):
               print(holder)
               return (holder)
@@ -1187,6 +1190,7 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
                     gid = int(uuid.uuid4())
 
             if not frame.is_recomputed[gid]:
+                ic('yes')
                 args = frame.get_inputs()
 
                 try:
@@ -1199,6 +1203,7 @@ class _checkpoint_hook(torch.autograd.graph.saved_tensors_hooks):
                     pass
                 frame.is_recomputed[gid] = True
                 frame.check_recomputed_tensors_match(gid)
+                ic('no')
 
             _internal_assert(gid in holder.handles)
 

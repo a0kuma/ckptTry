@@ -1,0 +1,66 @@
+(sum26) andy@140:~/playground/ckptTry/workspace_if_pack_hook_unpack_hook_instance_of_prams$ python index.py
+tensor([[-0.0319, -0.0765, -0.1988],
+        [ 0.3133,  0.1479,  0.2438],
+        [ 0.3516,  0.1036, -0.1861],
+        [ 0.1187, -0.1341, -0.2082],
+        [ 0.3001, -0.0789,  0.3425],
+        [-0.1725, -0.0179,  0.2739],
+        [ 0.1669,  0.2320,  0.1925]], device='cuda:0', grad_fn=<TBackward0>)
+tensor([[-0.2867, -0.4333, -0.2085, -0.5073,  0.4864],
+        [-0.0648, -0.1038, -0.1197,  0.1140,  0.5426],
+        [ 0.5703,  0.4093, -0.4290,  0.3669, -0.5578]], device='cuda:0',
+       grad_fn=<TBackward0>)
+ic| checkpoint.py:1176 in unpack_hook()
+    holder: tensor([[-0.2867, -0.4333, -0.2085, -0.5073,  0.4864],
+                    [-0.0648, -0.1038, -0.1197,  0.1140,  0.5426],
+                    [ 0.5703,  0.4093, -0.4290,  0.3669, -0.5578]], device='cuda:0',
+                   grad_fn=<TBackward0>)
+tensor([[-0.2867, -0.4333, -0.2085, -0.5073,  0.4864],
+        [-0.0648, -0.1038, -0.1197,  0.1140,  0.5426],
+        [ 0.5703,  0.4093, -0.4290,  0.3669, -0.5578]], device='cuda:0',
+       grad_fn=<TBackward0>)
+ic| checkpoint.py:1176 in unpack_hook()
+    holder: <checkpoint._Holder object at 0x79220aa8ae90>
+ic| checkpoint.py:1104 in pack_hook()- recomp_idx: 0
+ic| checkpoint.py:1138 in pack_hook()
+    x: tensor([[ 0.9211, -1.1386]], device='cuda:0')
+ic| checkpoint.py:1104 in pack_hook()- recomp_idx: 1
+ic| checkpoint.py:1138 in pack_hook()
+    x: tensor([[-0.0319, -0.0765, -0.1988],
+               [ 0.3133,  0.1479,  0.2438],
+               [ 0.3516,  0.1036, -0.1861],
+               [ 0.1187, -0.1341, -0.2082],
+               [ 0.3001, -0.0789,  0.3425],
+               [-0.1725, -0.0179,  0.2739],
+               [ 0.1669,  0.2320,  0.1925]], device='cuda:0')
+ic| checkpoint.py:1104 in pack_hook()- recomp_idx: 2
+Traceback (most recent call last):
+  File "/home/andy/playground/ckptTry/workspace_if_pack_hook_unpack_hook_instance_of_prams/index.py", line 32, in <module>
+    y.backward(loss)
+    ~~~~~~~~~~^^^^^^
+  File "/home/andy/anaconda3/envs/sum26/lib/python3.14/site-packages/torch/_tensor.py", line 631, in backward
+    torch.autograd.backward(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        self, gradient, retain_graph, create_graph, inputs=inputs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/andy/anaconda3/envs/sum26/lib/python3.14/site-packages/torch/autograd/__init__.py", line 379, in backward
+    _engine_run_backward(
+    ~~~~~~~~~~~~~~~~~~~~^
+        tensors,
+        ^^^^^^^^
+    ...<5 lines>...
+        accumulate_grad=True,
+        ^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/andy/anaconda3/envs/sum26/lib/python3.14/site-packages/torch/autograd/graph.py", line 882, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        t_outputs, *args, **kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )  # Calls into the C++ engine to run the backward pass
+    ^
+RuntimeError: Function MmBackward0 returned an invalid gradient at index 1 - got [7, 5] but expected shape compatible with [3, 5]
+(
